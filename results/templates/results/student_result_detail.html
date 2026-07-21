@@ -1,0 +1,878 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Academic Results - {{ result.student.user.get_full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #1a3a52;
+        --secondary-color: #2d5a7b;
+        --success-color: #27ae60;
+        --danger-color: #e74c3c;
+        --warning-color: #f39c12;
+        --info-color: #3498db;
+        --light-bg: #f8f9fa;
+        --border-color: #e0e0e0;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--light-bg);
+        color: #333;
+    }
+
+    /* Header Section */
+    .report-header {
+        background: white;
+        border-bottom: 3px solid var(--primary-color);
+        padding: 30px 20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .school-logo {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 15px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 40px;
+    }
+
+    .school-name {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 10px 0;
+    }
+
+    .school-motto {
+        font-size: 14px;
+        color: #666;
+        font-style: italic;
+        margin: 5px 0;
+    }
+
+    .school-contact {
+        font-size: 12px;
+        color: #888;
+        margin-top: 10px;
+    }
+
+    /* Student Profile Section */
+    .student-profile {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 30px;
+        align-items: start;
+    }
+
+    .student-photo {
+        width: 150px;
+        height: 150px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 60px;
+        border: 3px solid var(--primary-color);
+    }
+
+    .student-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        font-size: 15px;
+        color: #333;
+    }
+
+    /* Exam Information */
+    .exam-info {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .exam-info-card {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        border-left: 4px solid var(--primary-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .exam-info-card i {
+        color: var(--primary-color);
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    .exam-info-label {
+        font-size: 11px;
+        color: #888;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .exam-info-value {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    /* Subject Results Table */
+    .results-section {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+    }
+
+    .section-title {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 20px;
+        font-size: 18px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title i {
+        font-size: 22px;
+    }
+
+    .section-content {
+        padding: 20px;
+    }
+
+    /* Subject Table */
+    .subjects-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .subjects-table thead {
+        background: #f8f9fa;
+        border-bottom: 2px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .subjects-table th {
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--primary-color);
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+    }
+
+    .subjects-table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.2s;
+    }
+
+    .subjects-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .subjects-table tbody tr:nth-child(even) {
+        background-color: #fafbfc;
+    }
+
+    .subjects-table td {
+        padding: 12px;
+    }
+
+    .subject-name {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .marks-cell {
+        text-align: center;
+        font-weight: 500;
+    }
+
+    .grade-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-weight: 700;
+        text-align: center;
+        min-width: 40px;
+        color: white;
+    }
+
+    .grade-a { background-color: var(--success-color); }
+    .grade-b { background-color: #3498db; }
+    .grade-c { background-color: var(--warning-color); }
+    .grade-d { background-color: #e67e22; }
+    .grade-f { background-color: var(--danger-color); }
+
+    /* Summary Cards */
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .summary-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-top: 4px solid var(--primary-color);
+        text-align: center;
+    }
+
+    .summary-card i {
+        font-size: 32px;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+
+    .summary-card-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 10px 0;
+    }
+
+    .summary-card-label {
+        font-size: 12px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    /* Progress Bars */
+    .progress-item {
+        margin-bottom: 20px;
+    }
+
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .progress {
+        height: 24px;
+        border-radius: 4px;
+        overflow: hidden;
+        background-color: #e0e0e0;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+        transition: width 0.3s ease;
+    }
+
+    /* Status Badge */
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-pass {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-fail {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-incomplete {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    /* Comments Section */
+    .comment-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-left: 4px solid var(--primary-color);
+        margin-bottom: 15px;
+        border-radius: 4px;
+    }
+
+    .comment-type {
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .comment-text {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    /* Behaviour Grid */
+    .behaviour-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+
+    .behaviour-item {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+    }
+
+    .behaviour-label {
+        font-size: 12px;
+        color: #888;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+    }
+
+    .behaviour-grade {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+    }
+
+    .behaviour-remark {
+        font-size: 13px;
+        color: #666;
+    }
+
+    /* QR Code */
+    .qr-section {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .qr-code {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto 15px;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        padding: 10px;
+        background: white;
+    }
+
+    .qr-text {
+        font-size: 12px;
+        color: #888;
+        margin-top: 10px;
+    }
+
+    /* Signatures */
+    .signatures {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin-top: 40px;
+        padding-top: 40px;
+        border-top: 2px solid var(--border-color);
+    }
+
+    .signature-line {
+        text-align: center;
+    }
+
+    .signature-space {
+        border-top: 1px solid #333;
+        height: 60px;
+        margin-bottom: 10px;
+    }
+
+    .signature-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .signature-title {
+        font-size: 11px;
+        color: #888;
+        font-style: italic;
+    }
+
+    /* Print Styles */
+    @media print {
+        body {
+            background: white;
+        }
+        .no-print {
+            display: none;
+        }
+        .report-header {
+            page-break-after: avoid;
+        }
+        .results-section {
+            page-break-inside: avoid;
+        }
+        .student-profile {
+            page-break-after: avoid;
+        }
+    }
+
+    /* Watermark */
+    @media print {
+        body::before {
+            content: 'OFFICIAL RESULT';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100px;
+            color: rgba(0, 0, 0, 0.1);
+            z-index: -1;
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .student-profile {
+            grid-template-columns: 1fr;
+        }
+        .student-info {
+            grid-template-columns: 1fr;
+        }
+        .exam-info {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .signatures {
+            grid-template-columns: 1fr;
+        }
+        .subjects-table {
+            font-size: 12px;
+        }
+        .subjects-table th, .subjects-table td {
+            padding: 8px;
+        }
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 25px 0;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 6px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--secondary-color);
+        box-shadow: 0 4px 12px rgba(26, 58, 82, 0.3);
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-lg my-5">
+    <!-- Report Header -->
+    <div class="report-header">
+        <div class="school-logo">
+            <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div class="school-name">{{ result.examination.name }}</div>
+        <div class="school-motto">Academic Report Card</div>
+        <div class="school-contact">
+            <small>
+                Academic Year: <strong>{{ result.examination.academic_year }}</strong> | 
+                Term: <strong>{{ result.examination.get_term_display }}</strong>
+            </small>
+        </div>
+    </div>
+
+    <!-- Student Profile Section -->
+    <div class="student-profile">
+        <div class="student-photo">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <div class="student-info">
+            <div class="info-item">
+                <div class="info-label">Full Name</div>
+                <div class="info-value">{{ result.student.user.get_full_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Admission Number</div>
+                <div class="info-value">{{ result.student.admission_number }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Gender</div>
+                <div class="info-value">{{ result.student.user.gender|default:"N/A" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Date of Birth</div>
+                <div class="info-value">{% if result.student.date_of_birth %}{{ result.student.date_of_birth|date:"d M Y" }}{% else %}N/A{% endif %}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Class</div>
+                <div class="info-value">{{ result.student.current_class }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Stream</div>
+                <div class="info-value">{{ result.student.current_stream|default:"N/A" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Information -->
+    <div class="exam-info">
+        <div class="exam-info-card">
+            <i class="fas fa-calendar"></i>
+            <div class="exam-info-label">Exam Date</div>
+            <div class="exam-info-value">{{ result.examination.exam_date|date:"d M Y" }}</div>
+        </div>
+        <div class="exam-info-card">
+            <i class="fas fa-book"></i>
+            <div class="exam-info-label">Total Subjects</div>
+            <div class="exam-info-value">{{ result.subject_results.count }}</div>
+        </div>
+        <div class="exam-info-card">
+            <i class="fas fa-users"></i>
+            <div class="exam-info-label">Total Students</div>
+            <div class="exam-info-value">{{ result.examination.results.count }}</div>
+        </div>
+        <div class="exam-info-card">
+            <i class="fas fa-trophy"></i>
+            <div class="exam-info-label">Overall Position</div>
+            <div class="exam-info-value">{{ result.overall_position|default:"N/A" }}</div>
+        </div>
+    </div>
+
+    <!-- Subject Results Section -->
+    <div class="results-section">
+        <div class="section-title">
+            <i class="fas fa-chart-bar"></i>
+            Subject Results
+        </div>
+        <div class="section-content">
+            <div class="table-responsive">
+                <table class="subjects-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th class="marks-cell">C.A</th>
+                            <th class="marks-cell">Test</th>
+                            <th class="marks-cell">Midterm</th>
+                            <th class="marks-cell">Final</th>
+                            <th class="marks-cell">Total</th>
+                            <th class="marks-cell">Average</th>
+                            <th class="marks-cell">Grade</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sr in subject_results %}
+                        <tr>
+                            <td class="subject-name">{{ sr.subject.name }}</td>
+                            <td class="marks-cell">{{ sr.ca_marks|floatformat:1 }}</td>
+                            <td class="marks-cell">{{ sr.test_marks|floatformat:1 }}</td>
+                            <td class="marks-cell">{{ sr.midterm_marks|floatformat:1 }}</td>
+                            <td class="marks-cell">{{ sr.final_exam_marks|floatformat:1 }}</td>
+                            <td class="marks-cell"><strong>{{ sr.total_marks|floatformat:1 }}</strong></td>
+                            <td class="marks-cell"><strong>{{ sr.average|floatformat:1 }}</strong></td>
+                            <td class="marks-cell">
+                                <span class="grade-badge grade-{{ sr.grade|lower }}">{{ sr.grade }}</span>
+                            </td>
+                            <td>{{ sr.remarks|default:"--" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <i class="fas fa-book"></i>
+            <div class="summary-card-label">Total Subjects</div>
+            <div class="summary-card-value">{{ result.subject_results.count }}</div>
+        </div>
+        <div class="summary-card">
+            <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
+            <div class="summary-card-label">Subjects Passed</div>
+            <div class="summary-card-value" style="color: var(--success-color);">{{ result.subjects_passed }}</div>
+        </div>
+        <div class="summary-card">
+            <i class="fas fa-times-circle" style="color: var(--danger-color);"></i>
+            <div class="summary-card-label">Subjects Failed</div>
+            <div class="summary-card-value" style="color: var(--danger-color);">{{ result.subjects_failed }}</div>
+        </div>
+        <div class="summary-card">
+            <i class="fas fa-percent"></i>
+            <div class="summary-card-label">Overall Average</div>
+            <div class="summary-card-value">{{ result.average_marks|floatformat:2 }}%</div>
+        </div>
+        <div class="summary-card">
+            <i class="fas fa-star"></i>
+            <div class="summary-card-label">Overall Grade</div>
+            <div class="summary-card-value">{{ result.overall_grade }}</div>
+        </div>
+        <div class="summary-card">
+            <i class="fas fa-medal"></i>
+            <div class="summary-card-label">Division</div>
+            <div class="summary-card-value">{{ result.division }}</div>
+        </div>
+    </div>
+
+    <!-- Attendance Section -->
+    {% if attendance %}
+    <div class="results-section">
+        <div class="section-title">
+            <i class="fas fa-calendar-check"></i>
+            Attendance Summary
+        </div>
+        <div class="section-content">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Attendance Rate</span>
+                            <span><strong>{{ attendance.attendance_percentage|floatformat:1 }}%</strong></span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: {{ attendance.attendance_percentage }}%;">{{ attendance.attendance_percentage|floatformat:0 }}%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div><strong>Days Present:</strong> {{ attendance.days_present }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div><strong>Days Absent:</strong> {{ attendance.days_absent }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div><strong>Sick Days:</strong> {{ attendance.days_sick }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div><strong>Permission Days:</strong> {{ attendance.days_permission }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Behaviour Assessment -->
+    {% if behaviour %}
+    <div class="results-section">
+        <div class="section-title">
+            <i class="fas fa-smile"></i>
+            Behaviour & Conduct Assessment
+        </div>
+        <div class="section-content">
+            <div class="behaviour-grid">
+                <div class="behaviour-item">
+                    <div class="behaviour-label">Discipline</div>
+                    <div class="behaviour-grade">{{ behaviour.discipline }}</div>
+                    <div class="behaviour-remark">{{ behaviour.get_discipline_display }}</div>
+                </div>
+                <div class="behaviour-item">
+                    <div class="behaviour-label">Leadership</div>
+                    <div class="behaviour-grade">{{ behaviour.leadership }}</div>
+                    <div class="behaviour-remark">{{ behaviour.get_leadership_display }}</div>
+                </div>
+                <div class="behaviour-item">
+                    <div class="behaviour-label">Punctuality</div>
+                    <div class="behaviour-grade">{{ behaviour.punctuality }}</div>
+                    <div class="behaviour-remark">{{ behaviour.get_punctuality_display }}</div>
+                </div>
+                <div class="behaviour-item">
+                    <div class="behaviour-label">Responsibility</div>
+                    <div class="behaviour-grade">{{ behaviour.responsibility }}</div>
+                    <div class="behaviour-remark">{{ behaviour.get_responsibility_display }}</div>
+                </div>
+                <div class="behaviour-item">
+                    <div class="behaviour-label">Cooperation</div>
+                    <div class="behaviour-grade">{{ behaviour.cooperation }}</div>
+                    <div class="behaviour-remark">{{ behaviour.get_cooperation_display }}</div>
+                </div>
+                <div class="behaviour-item">
+                    <div class="behaviour-label">Respect</div>
+                    <div class="behaviour-grade">{{ behaviour.respect }}</div>
+                    <div class="behaviour-remark">{{ behaviour.get_respect_display }}</div>
+                </div>
+                <div class="behaviour-item">
+                    <div class="behaviour-label">Cleanliness</div>
+                    <div class="behaviour-grade">{{ behaviour.cleanliness }}</div>
+                    <div class="behaviour-remark">{{ behaviour.get_cleanliness_display }}</div>
+                </div>
+                <div class="behaviour-item">
+                    <div class="behaviour-label">Creativity</div>
+                    <div class="behaviour-grade">{{ behaviour.creativity }}</div>
+                    <div class="behaviour-remark">{{ behaviour.get_creativity_display }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Comments Section -->
+    {% if comments %}
+    <div class="results-section">
+        <div class="section-title">
+            <i class="fas fa-comments"></i>
+            Teacher Comments
+        </div>
+        <div class="section-content">
+            {% for comment in comments %}
+            <div class="comment-item">
+                <div class="comment-type">{{ comment.get_comment_type_display }}</div>
+                <div class="comment-text">{{ comment.comment }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- QR Code Verification -->
+    <div class="qr-section">
+        <h5 class="mb-4">Result Verification</h5>
+        {% if qr_code_base64 %}
+        <img src="{{ qr_code_base64 }}" class="qr-code" alt="QR Code">
+        <div class="qr-text">Scan to verify result authenticity</div>
+        {% endif %}
+    </div>
+
+    <!-- Signatures Section -->
+    <div class="signatures">
+        <div class="signature-line">
+            <div class="signature-space"></div>
+            <div class="signature-label">Class Teacher</div>
+            <div class="signature-title">Date: _______________</div>
+        </div>
+        <div class="signature-line">
+            <div class="signature-space"></div>
+            <div class="signature-label">Academic Master</div>
+            <div class="signature-title">Date: _______________</div>
+        </div>
+        <div class="signature-line">
+            <div class="signature-space"></div>
+            <div class="signature-label">Headmaster</div>
+            <div class="signature-title">Date: _______________</div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons no-print">
+        <a href="{% url 'results:student_pdf' result.id %}" class="btn btn-primary">
+            <i class="fas fa-download"></i> Download PDF
+        </a>
+        <button onclick="window.print()" class="btn btn-secondary">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+        <a href="{% url 'results:result_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Results
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Print handler
+    function printReport() {
+        window.print();
+    }
+
+    // Chart.js for performance visualization (optional)
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Results page loaded');
+    });
+</script>
+{% endblock %}
